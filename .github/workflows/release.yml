@@ -32,6 +32,10 @@ jobs:
         run: |
           echo "PROJECT_NAME=$(sed -n 's/^name = "\(.*\)"/\1/p' Cargo.toml | head -n1)" >> $GITHUB_ENV
 
+      # zigをインストール
+      - name: Install Zig
+        uses: goto-bus-stop/setup-zig@v2
+
       # rustをインストール
       - name: Install Rust toolchain
         uses: moonrepo/setup-rust@v1
