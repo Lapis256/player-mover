@@ -54,7 +54,7 @@ jobs:
       - name: Build without glibc version
         if: matrix.glibc == -1
         run: |
-          cargo zigbuild --release --target ${{ matrix.target }}
+          cargo build --release --target ${{ matrix.target }}
 
       # ビルド済みバイナリをリネーム
       - name: Rename artifacts
