@@ -1,16 +1,14 @@
+mod api;
 mod dat;
+mod player;
 
-use std::{
-    error::Error,
-    fs::{self},
-    path::PathBuf,
-};
+use std::{error::Error, path::PathBuf};
 
 use clap::Parser;
 use dialoguer::Select;
-use mojang::Player;
 
-use dat::{get_spawn_point, read_player_data, write_player_data};
+use dat::get_spawn_point;
+use player::get_all_player;
 
 #[derive(Debug, Parser)]
 #[command(author, version, long_about = None, arg_required_else_help = true)]
@@ -41,37 +39,25 @@ fn parse_pos(s: &str) -> Result<[f64; 3], String> {
     }
 }
 
-fn select_player(player_dat_paths: Vec<PathBuf>) -> Result<PathBuf, Box<dyn Error>> {
-    let players = player_dat_paths
-        .iter()
-        .map(|p| p.file_stem().unwrap().to_str().unwrap().to_lowercase())
-        .filter_map(|p| Some(Player::new(p).ok()?.name))
-        .collect::<Vec<_>>();
+fn main() -> Result<(), Box<dyn Error>> {
+    let cli = Cli::parse();
+    let path = &cli.world;
+    let mut players = get_all_player(path)?;
 
     let choice: usize = Select::new()
-        .items(&players)
+        .items(
+            &players
+                .iter()
+                .map(|player| player.get_name())
+                .collect::<Vec<_>>(),
+        )
         .default(0)
         .with_prompt("Select a player")
         .interact()?;
 
-    Ok(player_dat_paths[choice].clone())
-}
+    let player = players[choice].as_mut();
 
-fn main() -> Result<(), Box<dyn Error>> {
-    let cli = Cli::parse();
-    let path = &cli.world;
-    let player_data = path.join("playerdata");
-
-    let builder = globmatch::Builder::new(
-        "[0-9a-fA-F]*-[0-9a-fA-F]*-4[0-9a-fA-F]*-[89abAB][0-9a-fA-F]*-[0-9a-fA-F]*.dat",
-    )
-    .build(player_data)?;
-    let player_dat_paths = builder.into_iter().flatten().collect::<Vec<_>>();
-    let player_path = select_player(player_dat_paths)?;
-
-    fs::copy(&player_path, player_path.with_extension("dat_pm_old"))?;
-
-    let mut player_data = read_player_data(&player_path).expect("Failed to read player data");
+    let mut player_data = player.load_data().expect("Failed to read player data");
 
     player_data.pos = cli
         .change_position
@@ -80,12 +66,17 @@ fn main() -> Result<(), Box<dyn Error>> {
         .change_dimension
         .unwrap_or("minecraft:overworld".to_string());
 
-    write_player_data(&player_path, &player_data).expect("Failed to write player data");
+    player
+        .save_data(player_data)
+        .expect("Failed to write player data");
 
     println!("Player moved successfully");
     println!(
         "Old player data backed up to: {}",
-        player_path.with_extension("dat_pm_old").to_string_lossy()
+        player
+            .get_path()
+            .with_extension("dat_pm_old")
+            .to_string_lossy()
     );
 
     Ok(())

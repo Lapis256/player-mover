@@ -1,17 +1,18 @@
 # player-mover
-プレイヤーの座標を編集するMinecraftのツールです。
+[English](./README.md) / [日本語](./README_ja.md)
 
-## 使い方
+A Minecraft tool to edit player positions.
+
+## Usage
 ```
 player_mover <WORLD> [CHANGE_POSITION] [CHANGE_DIMENSION]
 ```
-- WORLD (必須)
-  - ワールドディレクトリ
-- CHANGE_POSITION (任意)
-  - 指定した座標にプレイヤーを移動させます。
-  - 形式: x,y,z
-  - 指定していない場合はスポーン座標に移動させます
-- CHANGE_DIMENSION (任意)
-  - 指定したディメンションにプレイヤーを移動させます
-  - 指定していない場合はオーバーワールドに移動させます
-
+- WORLD (required)
+  - World directory
+- CHANGE_POSITION (optional)
+  - Moves the player to the specified position.
+  - Format: x,y,z
+  - If not specified, the player is moved to the spawn position.
+- CHANGE_DIMENSION (optional)
+  - Moves the player to the specified dimension.
+  - If not specified, the player is moved to the Overworld.

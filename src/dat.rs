@@ -10,7 +10,7 @@ use fastnbt::Value;
 use flate2::{read::GzDecoder, write::GzEncoder, Compression};
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct PlayerData {
     pub pos: [f64; 3],
@@ -20,31 +20,30 @@ pub struct PlayerData {
     other: HashMap<String, Value>,
 }
 
-#[derive(Serialize, Deserialize)]
-struct LevelDat {
-    #[serde(rename = "Data")]
-    data: Data,
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "PascalCase")]
+pub struct LevelDat {
+    pub data: Data,
+
+    #[serde(flatten)]
+    other: HashMap<String, Value>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "PascalCase")]
-struct Data {
+pub struct Data {
     spawn_x: i32,
     spawn_y: i32,
     spawn_z: i32,
+
+    pub player: PlayerData,
 
     #[serde(flatten)]
     other: HashMap<String, Value>,
 }
 
 pub fn get_spawn_point(world: &Path) -> Result<[f64; 3], Box<dyn Error>> {
-    let level_dat_path = world.join("level.dat");
-    let file = File::open(level_dat_path)?;
-    let mut decoder = GzDecoder::new(file);
-    let mut bytes = vec![];
-    decoder.read_to_end(&mut bytes)?;
-
-    let level_dat: LevelDat = fastnbt::from_bytes(&bytes)?;
+    let level_dat: LevelDat = fastnbt::from_bytes(&read_gzip(&world.join("level.dat"))?)?;
 
     Ok([
         level_dat.data.spawn_x as f64,
@@ -53,20 +52,19 @@ pub fn get_spawn_point(world: &Path) -> Result<[f64; 3], Box<dyn Error>> {
     ])
 }
 
-pub fn read_player_data(path: &Path) -> Result<PlayerData, Box<dyn Error>> {
+pub fn read_gzip(path: &Path) -> Result<Vec<u8>, Box<dyn Error>> {
     let file = File::open(path)?;
     let mut decoder = GzDecoder::new(file);
-    let mut bytes = vec![];
-    decoder.read_to_end(&mut bytes)?;
+    let mut buf = vec![];
+    decoder.read_to_end(&mut buf)?;
 
-    Ok(fastnbt::from_bytes(&bytes)?)
+    Ok(buf)
 }
 
-pub fn write_player_data(path: &Path, player_data: &PlayerData) -> Result<(), Box<dyn Error>> {
-    let bytes = fastnbt::to_bytes(player_data)?;
+pub fn write_gzip(path: &Path, data: Vec<u8>) -> Result<(), Box<dyn Error>> {
     let file = File::create(path)?;
     let mut encoder = GzEncoder::new(file, Compression::best());
-    encoder.write_all(&bytes)?;
+    encoder.write_all(&data)?;
 
     Ok(())
 }

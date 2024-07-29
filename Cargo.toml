@@ -1,15 +1,18 @@
 [package]
 name = "player_mover"
 description = "A Minecraft tool to edit player data and change their position."
-version = "1.0.0"
+version = "1.1.0"
 edition = "2021"
+license = "MIT"
+repository = "https://github.com/Lapis256/player-mover"
+readme = "README.md"
 authors = ["Lapis256"]
 
 [dependencies]
 fastnbt = "2"
 flate2 = "1.0"
 dialoguer = "0.11.0"
-mojang = "0.1.0"
+ureq = { version = "2.10.0", features = ["json"] }
 globmatch = "0.3"
 serde = { version = "1", features = ["derive"] }
 clap = { version = "4", features = ["derive", "string"] }
