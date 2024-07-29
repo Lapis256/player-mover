@@ -7,6 +7,8 @@ license = "MIT"
 repository = "https://github.com/Lapis256/player-mover"
 readme = "README.md"
 authors = ["Lapis256"]
+keywords = ["minecraft", "cli"]
+categories = ["command-line-utilities"]
 
 [dependencies]
 fastnbt = "2"
